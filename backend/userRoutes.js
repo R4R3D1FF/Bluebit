@@ -3,18 +3,14 @@ import connectAndQuery from './postgresQuery.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { MongoClient } from 'mongodb';
-import bcrypt from 'bcrypt';
-import cors from 'cors';
-import { post, getPost, upvotePost, downvotePost } from './postAPI.js';
 
 import loginController from './controllers/loginController.js';
 import registerController from './controllers/registerController.js';
 import submitController from './controllers/submitController.js';
 import profileController from './controllers/profileController.js';
 import postController from './controllers/postController.js';
-import voteController from './controllers/voteController.js';
+import {votePutController, voteDeleteController} from './controllers/voteController.js';
 
-import verifyToken from './middlewares/authMiddleware.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +40,12 @@ router.get('/random/', express.json(), async (req, res) => {
 });
 
 router.post('/login', express.json(), loginController);
+router.post('/logout', () => {
+    res.clearCookie("jwt");
+    res.json({
+        message: "Logged out successfully",
+    });
+});
 
 router.post('/register', express.json(), registerController);
 
@@ -64,9 +66,11 @@ router.get('/Reddit-Logo.png', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reddit-Logo.png'));
 });
 
-router.post('/submit/', express.json(), verifyToken, express.json(), submitController);
+router.post('/submit/', express.json(), submitController);
 
-router.put('/vote/', express.json(), voteController);
+router.put('/vote/', express.json(), votePutController);
+
+router.delete('/vote/', express.json(), voteDeleteController);
 
 router.get('/r/all/top/', async (req, res) => {
     const count = req.query.count;
@@ -155,18 +159,44 @@ router.get('/r/:subreddit/hot/', async (req, res) => {
 router.get(/^\/r\/([^/]+)\/comments\/(\d+)$/, postController);
 router.get(/^\/r\/([^/]+)\/comments\/(\d+)\/$/, postController);
 
-router.get("/u/:id/", profileController);
+router.get("/u/:username/", profileController);
 
 router.get("/subreddit/:id/", async (req, res) => {
     const result = await connectAndQuery(`SELECT * from subreddits where subredditid = ${req.params.id};`);
     // console.log("The rows are", result.rows);
     res.json(result.rows);
-})
+});
 
 router.get("/subreddits/", async (req, res) => {
     const result = await connectAndQuery(`SELECT * from subreddits;`);
     // console.log("The rows are", result.rows);
     res.json(result.rows);
-})
+});
+
+router.get("/user/:id/", async (req, res) => {
+    const result = await connectAndQuery(`SELECT * from users where userid = ${req.params.id};`);
+    // console.log("The rows are", result.rows);
+    res.json(result.rows);
+});
+
+router.get("/users/", async (req, res) => {
+    const result = await connectAndQuery(`SELECT * from users;`);
+    // console.log("The rows are", result.rows);
+    res.json(result.rows);
+});
+
+router.get("/vote/:userid/:postid/", async (req, res) => {
+    const result = await connectAndQuery(`SELECT * from votes where userid = ${req.params.userid} and postid = ${req.params.postid};`);
+    res.json(result.rows);
+});
+
+router.put("/vote/:userid/:postid/", async (req, res) => {
+    const result = await connectAndQuery(`INSERT INTO votes (userid, postid, vote)
+        VALUES (${req.params.userid}, ${req.params.postid}, ${req.body.vote})
+        ON CONFLICT (userid, postid)
+        DO UPDATE SET vote = EXCLUDED.vote;
+    `);
+    res.json(result.rows);
+});
 
 export default router;

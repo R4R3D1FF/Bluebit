@@ -2,14 +2,19 @@ import express from 'express';
 import router from './userRoutes.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const PORT = 8000;
 
 
 const app = express();
+
+app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:5173", 
+    origin: "http://127.0.0.1:5173", 
+    secure: true,
+    credentials: true,
 }));
 
 

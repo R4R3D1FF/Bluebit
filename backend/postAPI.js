@@ -14,18 +14,6 @@ async function getPost(postid){
     return result.rows;
 }
 
-async function upvotePost(postid){
-    console.log(`UPDATE Posts SET upvotes = upvotes + 1 WHERE postid = ${postid}`);
-    const result =  await connectAndQuery(`UPDATE Posts SET upvotes = upvotes + 1 WHERE postid = ${postid}`);
-    // console.log("posts Gotten:", result);
-    // return result;
-}
 
-async function downvotePost(postid){
-    console.log(`UPDATE Posts SET downvotes = downvotes + 1 WHERE postid = ${postid}`);
-    const result =  await connectAndQuery(`UPDATE Posts SET upvotes = upvotes - 1 WHERE postid = ${postid}`);
-    // console.log("posts Gotten:", result);
-    // return result;
-}
 
-export { post, getPost ,upvotePost, downvotePost};
+export { post, getPost};

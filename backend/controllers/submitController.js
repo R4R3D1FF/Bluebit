@@ -2,8 +2,10 @@ import jwt from 'jsonwebtoken';
 import { post } from "../postAPI.js";
 
 function submitController(req, res){
-    jwt.verify(req.token, process.env.SECRET_KEY, (err, authData) => {
+    console.log("obtained", req.cookies);
+    jwt.verify(req.cookies.jwt, process.env.SECRET_KEY, (err, authData) => {
     if(err) {
+        
         return res.sendStatus(403);
     } else {
         console.log("INSIDE POST");

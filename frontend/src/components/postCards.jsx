@@ -1,8 +1,15 @@
 import PostCard from './postCard.jsx';
+import { useState, useEffect } from 'react';
 
-async function fetchPosts() {
+async function fetchPosts(sub = "all", mode = "top", userpageMode = 0) {
+  console.log("INSIDE FETCHPOSTS");
   try {
-    const response = await fetch('http://127.0.0.1:8000/r/all/top?count=0');
+    let response;
+    if (!userpageMode)
+      response = await fetch(`http://127.0.0.1:8000/r/${sub}/${mode}?count=0`);
+    else
+      response = await fetch(`http://127.0.0.1:8000/u/${sub}/`);
+    console.log("RESPOSE AAYA", response);
     const data = await response.json();
 
     if (Array.isArray(data)) {
@@ -18,18 +25,41 @@ async function fetchPosts() {
 }
 
 
-const posts = await fetchPosts();
-console.log(posts);
+// const posts = await fetchPosts();
+// console.log(posts);
 
-const PostCards = ({ posts }) => {
+const PostCards = ({ sub, mode, userpageMode = 0 }) => {
+  const [posts, setPosts] = useState();
+  const [items, setItems] = useState();
 
-  const items = posts.map((item, index) => {
+  useEffect(() => {
+    const temp = async () => {
+      let postList;
+      console.log("INSIDE POSTCARDS");
+      postList = await fetchPosts(sub, mode, userpageMode);
+      
 
-    return <PostCard key={index} post={item} /> // Create an 'Item' component for each item
 
-  });
+      setPosts(postList);
+    };
+    temp();
+  }, []);
 
+  useEffect(() => {
+    if (!posts)
+      return;
+    const func = async () => {
+      setItems(await posts.map((item, index) => {
 
+        return <PostCard key={index} post={item} /> // Create an 'Item' component for each item
+    
+      }));
+    }
+
+    func();
+  }, [posts]);
+
+  
 
   return (
 
@@ -43,4 +73,4 @@ const PostCards = ({ posts }) => {
 
 };
 
-export {posts, PostCards};
+export {PostCards};
